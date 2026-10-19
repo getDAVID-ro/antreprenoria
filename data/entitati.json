@@ -2,7 +2,7 @@
   "meta": {
     "sursa": "https://antreprenoria.ro",
     "extras_la": "2026-10-08",
-    "generat": "2026-10-16T14:47:10.892Z",
+    "generat": "2026-10-19T06:44:43.787Z",
     "pagini": 11,
     "metoda": "paginile edițiilor (/antreprenoria-16 … /antreprenoria-22, /antreprenoria-cluj) + /despre-noi + /contact; companii, organizații, aliasuri, parteneri și teme curate manual în data/curare/"
   },
@@ -695,15 +695,6 @@
       ],
       "participanti": [
         {
-          "persoana": "gabriel-pastrav",
-          "nume": "Gabriel Păstrăv",
-          "organizatie": "micul-fermier-branduri-proprii",
-          "cifra_afaceri": 134225574,
-          "angajati": 101,
-          "descriere": "Companie antreprenorială românească, cu capital integral românesc, care comercializează echipamente, piese de schimb și consumabile sub brandurile proprii: „Micul Fermier”, “Detoolz”, “Almaz” și “Micul Pădurar”.",
-          "imagine": "https://antreprenoria.ro/images/participanti-editia-16/gabriel-pastrav.webp"
-        },
-        {
           "persoana": "manole-mihai",
           "nume": "Manole Mihai",
           "organizatie": "tema-energy",
@@ -909,6 +900,15 @@
           "angajati": null,
           "descriere": "Fresh Salad promovează un stil de viață sănătos printr-un lanț local de restaurante care a fost deschis cu 6 luni înainte de pandemie.",
           "imagine": "https://antreprenoria.ro/images/participanti-editia-16/dobrescu-victor.webp"
+        },
+        {
+          "persoana": "gabriel-pastrav",
+          "nume": "Gabriel Păstrăv",
+          "organizatie": "micul-fermier",
+          "cifra_afaceri": 134225574,
+          "angajati": 101,
+          "descriere": "Companie antreprenorială românească, cu capital integral românesc, care comercializează echipamente, piese de schimb și consumabile sub brandurile proprii: „Micul Fermier”, “Detoolz”, “Almaz” și “Micul Pădurar”.",
+          "imagine": "https://antreprenoria.ro/images/participanti-editia-16/gabriel-pastrav.webp"
         }
       ],
       "parteneri": [
@@ -7795,7 +7795,12 @@
       "editii": [
         "bucuresti-16"
       ],
-      "nr_aparitii": 0
+      "nr_aparitii": 0,
+      "bio": null,
+      "expertiza": [],
+      "intrebari": [],
+      "oferta": [],
+      "pentru_cine": []
     },
     {
       "id": "manole-mihai",
@@ -15569,41 +15574,19 @@
       "sector": "Retail & distribuție",
       "url": "https://www.micul-fermier.ro/",
       "logo": null,
-      "descriere": "Companie antreprenorială românească, cu capital integral românesc, care comercializează echipamente, piese de schimb și consumabile sub brandurile proprii: „Micul Fermier”, “Detoolz”, “Almaz” și “Micul Pădurar”.",
+      "descriere": null,
       "incert": true,
       "nota": "Descrierea numește doar brandurile: Micul Fermier, Detoolz, Almaz, Micul Pădurar.",
-      "roluri": [
-        {
-          "editie": "bucuresti-16",
-          "rol": "participant",
-          "persoana": "gabriel-pastrav"
-        }
-      ],
-      "participari": [
-        {
-          "editie": "bucuresti-16",
-          "persoana": "gabriel-pastrav",
-          "cifra_afaceri": 134225574,
-          "angajati": 101
-        }
-      ],
+      "roluri": [],
+      "participari": [],
       "oameni": [
         "gabriel-pastrav"
       ],
       "tipuri": [
         "alumni"
       ],
-      "editii": [
-        "bucuresti-16"
-      ],
-      "parcurs": [
-        {
-          "editie": "bucuresti-16",
-          "roluri": [
-            "participant"
-          ]
-        }
-      ],
+      "editii": [],
+      "parcurs": [],
       "revine": false,
       "ciclu": null
     },
@@ -24489,6 +24472,52 @@
       ],
       "revine": false,
       "ciclu": null
+    },
+    {
+      "id": "micul-fermier",
+      "nume": "Micul Fermier",
+      "tip": "companie",
+      "sector": null,
+      "url": null,
+      "logo": null,
+      "descriere": null,
+      "incert": false,
+      "nota": null,
+      "roluri": [
+        {
+          "editie": "bucuresti-16",
+          "rol": "participant",
+          "persoana": "gabriel-pastrav"
+        }
+      ],
+      "participari": [
+        {
+          "editie": "bucuresti-16",
+          "persoana": "gabriel-pastrav",
+          "cifra_afaceri": 134225574,
+          "angajati": 101
+        }
+      ],
+      "oameni": [
+        "gabriel-pastrav"
+      ],
+      "tipuri": [
+        "alumni"
+      ],
+      "editii": [
+        "bucuresti-16"
+      ],
+      "parcurs": [
+        {
+          "editie": "bucuresti-16",
+          "roluri": [
+            "participant"
+          ]
+        }
+      ],
+      "revine": false,
+      "ciclu": null,
+      "adaugat_din_panou": true
     }
   ],
   "locatii": [

@@ -624,6 +624,24 @@
         "functii": [
           "General Manager"
         ]
+      },
+      "gabriel-pastrav": {
+        "nume": "Gabriel Păstrăv",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/gabriel-pastrav.webp",
+        "linkedin": null,
+        "companii": [
+          "Micul Fermier (branduri proprii)"
+        ],
+        "functii": [],
+        "tipuri": [],
+        "organizatii": [
+          "micul-fermier-branduri-proprii"
+        ],
+        "bio": null,
+        "expertiza": [],
+        "intrebari": [],
+        "oferta": [],
+        "pentru_cine": []
       }
     },
     "organizatii": {
@@ -857,7 +875,8 @@
         "descriere": "Companie românească de software și transformare digitală, fondată în 2003, care dezvoltă platforme pentru servicii financiare, logistică, retail, sănătate și sector public. Are câteva sute de angajați și certificare B Corp."
       },
       "micul-fermier-branduri-proprii": {
-        "url": "https://www.micul-fermier.ro/"
+        "url": "https://www.micul-fermier.ro/",
+        "descriere": null
       },
       "bisbags": {
         "url": "https://www.bisbags.ro/"
@@ -1143,6 +1162,11 @@
       },
       "kamun": {
         "url": "https://kamun.ro/"
+      },
+      "micul-fermier": {
+        "nume": "Micul Fermier",
+        "tip": "companie",
+        "_nou": true
       }
     },
     "editii": {
@@ -1186,7 +1210,226 @@
     "larisa-slavenie"
   ],
   "agende": {},
-  "participanti": {},
+  "participanti": {
+    "bucuresti-16": [
+      {
+        "persoana": "manole-mihai",
+        "nume": "Manole Mihai",
+        "organizatie": "tema-energy",
+        "cifra_afaceri": 73525269,
+        "angajati": 59,
+        "descriere": "Tema Energy are o experiență de peste 20 de ani în proiectarea, ingineria, integrarea și implementarea de Soluții și Sisteme la Cheie. Dispunând de o echipă de proiectanți, consultanți și ingineri pe multiple specializări (electric, HVAC, securitate, detecție-stingere incendii, comunicații), Tema Energy este lider în România în integrarea de sisteme complexe.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/manole-mihai.jpg"
+      },
+      {
+        "persoana": "iulia-sullivan",
+        "nume": "Iulia Sullivan",
+        "organizatie": "bisbags",
+        "cifra_afaceri": 27408645,
+        "angajati": 84,
+        "descriere": "Cu o echipă de peste 80 de angajați, Bisbags este prezentă pe piața din România și Europa încă din 2009. Utilizăm echipamente de înaltă calitate și avem o echipă specializată, capabilă să satisfacă toate nevoile pentru că produsele dumneavoastră să iasă în evidență față de concurență.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/iulia-sullivan.jpg"
+      },
+      {
+        "persoana": "vlad-lazanu",
+        "nume": "Vlad Lazanu",
+        "organizatie": "helix-logistics-development",
+        "cifra_afaceri": 24755441,
+        "angajati": 114,
+        "descriere": "Helix Logistics Development este o companie înființată în iulie 2020 de către un grup de acționari cu experiență în domeniul logisticii și al domeniului financiar-bancar. În scurt timp, compania devine un jucător important în industria logistică, oferind servicii de tip last mile de înaltă calitate.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/Vlad-Lazanu.webp"
+      },
+      {
+        "persoana": "soca-alexandru",
+        "nume": "Soca Alexandru",
+        "organizatie": "mht-experience",
+        "cifra_afaceri": 15175210,
+        "angajati": 47,
+        "descriere": "Viziune, devotament, încredere și curaj. Acestea sunt câteva din criteriile care definesc MHT Experience. Considerăm că succesul extraordinar deschide oportunități în afaceri și în viață. Succesul înseamnă, de asemenea, schimbări complexe și să facem lucrurile mai bine.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/Soca-Alexandru.webp"
+      },
+      {
+        "persoana": "theodora-popa",
+        "nume": "Theodora Popa",
+        "organizatie": "abeauty-clinique",
+        "cifra_afaceri": 13785226,
+        "angajati": 28,
+        "descriere": "Brandul aBeauty Clinique® a fost fondat în anul 2012 de către grupul de companii Agress Business aflat pe piața din România din 1997 și are experiență în management și în cultura serviciilor superioare de frumusețe și estetică medicală.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/teodora-popa.webp"
+      },
+      {
+        "persoana": "florin-marin",
+        "nume": "Florin Marin",
+        "organizatie": "domeniile-saftica",
+        "cifra_afaceri": 13447202,
+        "angajati": 46,
+        "descriere": "Continuăm tradiția, îmbunătățind constant experiență. Cu o istorie de 50 de ani, Domeniile Săftica reprezintă locul în care știm cât de important este să ai o experiență reușită. Refugiul tău elegant, unde ajungi ușor și de unde pleci mereu relaxat.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/florin-marin.webp"
+      },
+      {
+        "persoana": "alexandra-gavrila",
+        "nume": "Alexandra Gavrilă",
+        "organizatie": "cga-infrastructure",
+        "cifra_afaceri": 12576690,
+        "angajati": 160,
+        "descriere": "Din 2007, la CGA Infrastructure, am căutat permanent cele mai bune soluții pentru a oferi servicii de înalta calitate și pentru a câștiga încrederea și respectul clienților. Asigurăm servicii de construcții pentru birouri, case, apartamente, magazine, hale industriale, spații de depozitare, cât și servicii de facility management.",
+        "imagine": "https://antreprenoria.ro/images/user-woman.png"
+      },
+      {
+        "persoana": "sorin-tudosie",
+        "nume": "Sorin Tudosie",
+        "organizatie": "alivet-farm",
+        "cifra_afaceri": 10889566,
+        "angajati": 28,
+        "descriere": "Alivet Farm este un jucător relevant pe piața cabinetelor și farmaciilor veterinare, cu reprezentare în plan local.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/Tudosie-Sorin.webp"
+      },
+      {
+        "persoana": "florian-buca",
+        "nume": "Florian Bucă",
+        "organizatie": "soft-tehnica",
+        "cifra_afaceri": 10640123,
+        "angajati": 26,
+        "descriere": "Soft Tehnica este partenerul de încredere, care gândește și dezvoltă soluții web, mobile și aplicații AI/AR care să susțină o dezvoltare accelerată a afacerii tale.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/florian-buca.webp"
+      },
+      {
+        "persoana": "gabriel-mocanu",
+        "nume": "Gabriel Mocanu",
+        "organizatie": "electroinstal-solution",
+        "cifra_afaceri": 11953250,
+        "angajati": 41,
+        "descriere": "Fondată în 2008, Electroinstal Solution a devenit rapid un lider în dezvoltarea de soluții personalizate, cuprinzătoare și eficiente pentru proiectarea și execuția instalațiilor electrice de joasă și medie tensiune, sisteme de securitate (detecție incendiu, sistem anti-furt, control acces, CCTV), rețele de voce și date, atât pentru persoane fizice, cât și pentru companii.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/Gabriel-Mocanu.webp"
+      },
+      {
+        "persoana": "marinescu-razvan",
+        "nume": "Marinescu Răzvan",
+        "organizatie": "asertivo",
+        "cifra_afaceri": 9172429,
+        "angajati": 43,
+        "descriere": "AsertivO este liderul în îngrijirea și recuperarea medicală a vârstnicilor din România, având peste 8 ani de experiență. Principalul obiectiv al centrului situat în Otopeni este calitatea vieții persoanelor de vârsta a treia, oferind servicii medicale și sociale INCOMPARABILE.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/marinescu-razvan.webp"
+      },
+      {
+        "persoana": "andra-marinescu",
+        "nume": "Andra Marinescu",
+        "organizatie": "asertivo",
+        "cifra_afaceri": 9172429,
+        "angajati": 43,
+        "descriere": "AsertivO este liderul în îngrijirea și recuperarea medicală a vârstnicilor din România, având peste 8 ani de experiență. Principalul obiectiv al centrului situat în Otopeni este calitatea vieții persoanelor de vârsta a treia, oferind servicii medicale și sociale INCOMPARABILE.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/andra-marinescu.webp"
+      },
+      {
+        "persoana": "ionut-dragomir",
+        "nume": "Ionuț Dragomir",
+        "organizatie": "evamar",
+        "cifra_afaceri": 8192172,
+        "angajati": 9,
+        "descriere": "Evamar produce și comercializează ambalaje ecologice personalizate pentru afacerea ta.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/Ionut-Dragomir.webp"
+      },
+      {
+        "persoana": "andrei-sticea",
+        "nume": "Andrei Sticea",
+        "organizatie": "yda-proiect-consulting",
+        "cifra_afaceri": 7453423,
+        "angajati": 15,
+        "descriere": "Yda Proiect Consulting este o companie de inginerie civilă și consultanță, înființată în 2014, certificată și specializată în oferirea de soluții tehnice complete de proiectare.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/andrei-sticea.png"
+      },
+      {
+        "persoana": "laurentiu-manta",
+        "nume": "Laurențiu Manta",
+        "organizatie": "teckstar",
+        "cifra_afaceri": 5564696,
+        "angajati": 1,
+        "descriere": "TeckStar este o companie dinamică și cu viziune de viitor în domeniul consultanței IT, concentrată pe oferirea de servicii de înaltă calitate. Viziunea noastră este să devenim un consultant de încredere pentru clienții noștri, oferindu-le servicii IT de top.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/laurentiu-manta.webp"
+      },
+      {
+        "persoana": "bebe-vaduva",
+        "nume": "Bebe Văduva",
+        "organizatie": "eos-operational",
+        "cifra_afaceri": 5125393,
+        "angajati": 33,
+        "descriere": "EOS Operational este un jucător relevant în piața locală de curierat.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/vaduva-vasile-bebe.webp"
+      },
+      {
+        "persoana": "alexandru-balan",
+        "nume": "Alexandru Bălan",
+        "organizatie": "dotro",
+        "cifra_afaceri": 2330499,
+        "angajati": 10,
+        "descriere": "DOTRO a fost înființată în urmă cu 17 ani, cu capital 100% privat românesc. Am plecat la drum cu o echipă cu experiență, care pune preț pe cunoașterea și înțelegerea în detaliu a obiectivelor ce duc la succesul companiei tale. Pentru atingerea acestor obiective am creat un portofoliu de servicii divers care să satisfacă și cele mai înalte standarde.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/balan-alexandru.webp"
+      },
+      {
+        "persoana": "sergiu-mihail-olaru",
+        "nume": "Sergiu-Mihail Olaru",
+        "organizatie": "conacul-olarilor",
+        "cifra_afaceri": 2142468,
+        "angajati": 4,
+        "descriere": "La Pensiunea ”Conacul Olarilor” ne-am propus să păstrăm tradiția, dar să nu fim învechiți. Să reinterpretăm simboluri tradiționale, dar să fim autentici. Să dezvăluim lucruri de care de mult nu se mai vorbește. Am luat tot ce ne-au lăsat bun vechile generații, dar vrem să ne ne punem și noi amprenta.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/olaru-sergiu-mihail.webp"
+      },
+      {
+        "persoana": "madalin-moroianu",
+        "nume": "Mădălin Moroianu",
+        "organizatie": "magnolia-cafe",
+        "cifra_afaceri": 2054258,
+        "angajati": 10,
+        "descriere": "Conceptul Magnolia Cafe pune accent pe simplitate, gust și grijă/atenție la detalii. Altfel spus, suntem pasionați de gust și promotorii unei alimentatii echilibrate.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/moroianu-madalin.webp"
+      },
+      {
+        "persoana": "bogdan-lungu",
+        "nume": "Bogdan Lungu",
+        "organizatie": "secure-visio-services",
+        "cifra_afaceri": 1469948,
+        "angajati": 1,
+        "descriere": "Secure Visio Services SRL este o companie înființată în 2022 și specializată în activități de consultanță în tehnologia informației.",
+        "imagine": "https://antreprenoria.ro/images/user-img.png"
+      },
+      {
+        "persoana": "mihaela-ganciu",
+        "nume": "Mihaela Ganciu",
+        "organizatie": "caracteristic",
+        "cifra_afaceri": 838847,
+        "angajati": 2,
+        "descriere": "Caracteristic, o proaspătă agenție de PR care și-a făcut deja un nume în aglomerata industrie de comunicare din România. Spunem proaspătă și nu tânără, pentru că, deși am pus bazele Caracteristic la începutul anului 2015, am venit cu un bagaj consistent de cunoștințe și experiență.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/mihaela-ganciu.png"
+      },
+      {
+        "persoana": "dragos-draghici",
+        "nume": "Dragoș Draghici",
+        "organizatie": "homex",
+        "cifra_afaceri": null,
+        "angajati": null,
+        "descriere": "Homex înseamnă o echipă formată din oameni tineri, cu experiență vastă atât în mediul decoratiunilor interioare și fashion, cât și în domeniul marketing-ului online.",
+        "imagine": "https://antreprenoria.ro/images/user-img.png"
+      },
+      {
+        "persoana": "victor-dobrescu",
+        "nume": "Victor Dobrescu",
+        "organizatie": "fresh-salad",
+        "cifra_afaceri": null,
+        "angajati": null,
+        "descriere": "Fresh Salad promovează un stil de viață sănătos printr-un lanț local de restaurante care a fost deschis cu 6 luni înainte de pandemie.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/dobrescu-victor.webp"
+      },
+      {
+        "persoana": "gabriel-pastrav",
+        "nume": "Gabriel Păstrăv",
+        "organizatie": "micul-fermier",
+        "cifra_afaceri": 134225574,
+        "angajati": 101,
+        "descriere": "Companie antreprenorială românească, cu capital integral românesc, care comercializează echipamente, piese de schimb și consumabile sub brandurile proprii: „Micul Fermier”, “Detoolz”, “Almaz” și “Micul Pădurar”.",
+        "imagine": "https://antreprenoria.ro/images/participanti-editia-16/gabriel-pastrav.webp"
+      }
+    ]
+  },
   "parteneri": {},
   "ascunse": [
     "editii:bucuresti-23"
