@@ -86,6 +86,17 @@ async function saveAplicare(rec) {
     select token::text as t from upd union all select token::text from ins`, [JSON.stringify(rec)]);
   return rows[0] && rows[0].t;
 }
+// încărcarea unei imagini în Vercel Blob (public, fără sufix aleatoriu), prin API-ul HTTP, fără pachete; întoarce adresa sau null
+async function blobPut(pathname, buf, type) {
+  const headers = { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`, 'x-api-version': '11', 'x-content-type': type,
+    'x-add-random-suffix': '0', 'x-allow-overwrite': '1', 'x-vercel-blob-access': 'public' };
+  for (const u of [`https://vercel.com/api/blob/?pathname=${encodeURIComponent(pathname)}`, `https://blob.vercel-storage.com/${pathname}`]) {
+    const r = await fetch(u, { method: 'PUT', body: buf, headers, signal: AbortSignal.timeout(20e3) }).catch(() => null);
+    const j = r && r.ok ? await r.json().catch(() => null) : null;
+    if (j && j.url) return j.url;
+  }
+  return null;
+}
 // Previne ieșirea din directorul permis (../).
 function safe(base, rel) {
   const p = path.normalize(path.join(base, rel));
@@ -355,6 +366,18 @@ async function handler(req, res) {
         from aplicari where token = $1::uuid and not finalizata`, [t]).catch(() => []) : [];
       return rows.length ? sendJson(res, 200, rows[0].j) : sendJson(res, 404, { error: 'Aplicarea nu mai poate fi reluată.' });
     }
+    // starea stocării, pentru transfer (docs/transfer-client.md): ce bază și ce Blob folosește site-ul; nu arată niciun token
+    if (url === '/api/stare' && req.method === 'GET') {
+      const B = process.env.BLOB_READ_WRITE_TOKEN || '', D = process.env.DWF_BLOB_TOKEN || '', sid = (t) => t.split('_')[3] || '';
+      let imagini = null;
+      if (db.on()) imagini = await db.init().then(() => db.q('select count(*)::int as n from imagini')).then((r) => Number(r[0].n), () => null);
+      return sendJson(res, 200, {
+        neon: db.on(),
+        blob: !B ? 'niciunul (imaginile încărcate din panou stau în Neon)' : D && sid(D) === sid(B) ? 'BLOB_READ_WRITE_TOKEN (încă depozitul DWF)' : 'BLOB_READ_WRITE_TOKEN',
+        imagini_in_neon: imagini,
+        regiune: process.env.VERCEL_REGION || 'local',
+      });
+    }
     // întrebările aplicării, pentru etichetele din panou (Leads)
     if (url === '/api/aplica-model' && req.method === 'GET') return sendJson(res, 200, fresh('./site/aplica').STEPS);
     // formularul „Susține programul” (/parteneri): sponsorizare, găzduire, mentorat; salvat în Neon (tabelul implicari)
@@ -428,11 +451,9 @@ async function handler(req, res) {
       const file = `${script('lib').slug(nume || 'imagine').slice(0, 50) || 'imagine'}-${Date.now().toString(36)}.${ext}`;
       // unde ajunge imaginea: în Vercel Blob (dacă există BLOB_READ_WRITE_TOKEN), altfel în Neon, altfel (local, fără bază) pe disc
       if (process.env.BLOB_READ_WRITE_TOKEN) {
-        const r = await fetch(`https://blob.vercel-storage.com/uploads/${file}`, { method: 'PUT', body: buf,
-          headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`, 'x-api-version': '7', 'x-content-type': `image/${m[1]}`, 'x-add-random-suffix': '0' } }).catch(() => null);
-        const j = r && r.ok ? await r.json().catch(() => null) : null;
-        if (!j || !j.url) return sendJson(res, 502, { error: 'Imaginea nu s-a putut încărca în Blob.' });
-        return sendJson(res, 200, { url: j.url });
+        const url = await blobPut(`uploads/${file}`, buf, TYPES['.' + ext]);
+        if (url) return sendJson(res, 200, { url });
+        console.error('Blob indisponibil: imaginea rămâne în Neon');
       }
       if (db.on()) {
         await db.init();

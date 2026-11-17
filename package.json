@@ -8,9 +8,10 @@
     "crawl": "node scripts/crawl.js",
     "extract": "node scripts/extract-editions.js",
     "build": "node scripts/build-entities.js",
-    "sync": "npm run crawl && npm run extract && npm run build"
+    "sync": "npm run crawl && npm run extract && npm run build",
+    "blob:copy": "node scripts/blob-copy.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.12"
   }
 }

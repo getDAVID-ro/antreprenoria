@@ -4,7 +4,7 @@ Entitățile site-ului [antreprenoria.ro](https://antreprenoria.ro/) și panoul 
 
 ## Pornire
 
-Fără dependențe, doar Node.js 18+.
+Fără dependențe, doar Node.js 20.12+ (recomandat 24). Cu `.env.local` adus de `npx vercel env pull .env.local`, panoul local folosește aceeași bază Neon ca site-ul online.
 
 ```bash
 npm start
@@ -82,3 +82,24 @@ Site-ul e scris de mână, așa că unele lucruri nu se pot deduce automat:
 - `teme.json` – curriculum-ul: fiecare titlu de atelier se potrivește cu o temă prin regex.
 
 O ediție nouă: `npm run sync`, apoi completează în `companii.json` participanții noi. Scriptul de build îi listează în Audit drept „Participant fără companie în curare”.
+
+## Vercel, Neon și Blob
+
+- Site-ul și panoul rulează ca o singură funcție Node (`server.js`), în Frankfurt (`"regions": ["fra1"]`), lângă baza de date.
+- **Neon** (`DATABASE_URL`, pusă de integrarea Neon din Vercel) ține ce se schimbă din panou: modificările publicate și nepublicate, istoricul cu versiunile, brandul (tabelul `fisiere`), plus aplicările de pe `/aplica` (`aplicari`) și mesajele de pe `/parteneri` (`implicari`). Tabelele se creează singure la prima cerere (`site/db.js`). Ce nu e încă în Neon se citește din git (`site/store.js`), deci o bază nouă pornește fără migrare.
+- Entitățile de pe site = `data/entitati-baza.json` (site-ul vechi + curarea, din `npm run build`) + modificările din Neon. „Publică” din panou apare pe site imediat, fără git.
+- **Imaginile** site-ului sunt în git (`site/assets/`). Cele încărcate din panou merg în **Vercel Blob** dacă proiectul are `BLOB_READ_WRITE_TOKEN`, altfel în Neon (tabelul `imagini`, servite la `/assets/uploads/…`).
+- Fără `DATABASE_URL` (local), totul merge pe fișierele din `data/`, iar „Publică” trimite pe git.
+- Panoul online nu are parolă. Listele cu date personale (aplicări, mesaje) se văd doar în panoul pornit local.
+- `/api/stare` arată dacă proiectul are Neon și ce Blob folosește (fără tokenuri).
+
+## Mutarea imaginilor în Blob-ul vostru
+
+După transferul proiectului Vercel `antreprenoria`, imaginile încărcate din panou sunt încă în baza Neon (proiectul nu a avut Blob la DWF) și trebuie mutate în Blob-ul vostru:
+
+1. În proiectul de pe Vercel: Storage → Create → Blob, public, Frankfurt, legat de proiect (cu Development bifat). Dacă proiectul are deja variabila `BLOB_READ_WRITE_TOKEN`, ștergeți-o întâi: e de la depozitul DWF.
+2. Cu Node 24 sau mai nou: `git clone https://github.com/<cont-github>/antreprenoria.git`, apoi `cd antreprenoria`, apoi `npx vercel link` (alegeți proiectul `antreprenoria`), apoi `npx vercel env pull .env.local`, apoi `npm run blob:copy`. Copierea confirmă la final fiecare fișier și rescrie adresele imaginilor în datele panoului.
+3. Dacă există variabila `DWF_BLOB_TOKEN`, ștergeți-o din Settings → Environment Variables. Faceți Redeploy.
+4. Rulați încă o dată `npm run blob:copy`, ca să prindă ce s-a încărcat între timp.
+
+Verificare: https://antreprenoria-dwf3.vercel.app/api/stare (sau adresa nouă a proiectului) trebuie să arate `"blob":"BLOB_READ_WRITE_TOKEN"` și `"neon":true`. `<cont-github>` e contul vostru de GitHub, unde DWF a transferat repo-ul. Ce face DWF înainte și după: `docs/transfer-client.md`. În Claude Code, aceiași pași îi face comanda `/transfer-stocare`.
