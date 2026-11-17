@@ -106,7 +106,7 @@ function validate(input, ids, pas = STEPS.length) {
   return { ok: !Object.keys(errors).length, errors, data };
 }
 
-// rândul pentru Supabase: coloanele cunoscute + celelalte răspunsuri
+// rândul pentru baza de date (Neon): coloanele cunoscute + celelalte răspunsuri
 function record(d, { token, pas, finalizata, pagina }) {
   const rec = { token: token || null, pas, finalizata, sursa_pagina: pagina || null, raspunsuri: {} };
   COLS.forEach((k) => { rec[k] = d[k] || null; });

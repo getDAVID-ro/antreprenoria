@@ -320,6 +320,8 @@ const out = {
 //   entitati-local.json = plus modificările încă nepublicate (data/curare/editari-local.json), doar local
 const ED = require('./editari');
 const base = JSON.parse(JSON.stringify(out));
+// baza, fără modificările din panou: cu Neon, serverul aplică peste ea modificările din baza de date (server.js › deriveEntities)
+writeJson('entitati-baza.json', base);
 const pub = ED.published(readJson('curare/editari.json'));
 ED.apply(out, pub);
 writeJson('entitati.json', out);

@@ -1,6 +1,9 @@
 # doar pentru lucrul local: paginile copiate de pe site-ul actual, scripturile de extracție, capturi
 source/
-scripts/
+scripts/*
+# serverul are nevoie de acestea două (modificările din panou și slug-urile)
+!scripts/editari.js
+!scripts/lib.js
 docs/
 .claude/
 README.md

@@ -7,7 +7,9 @@ const { megaMenu } = require('./menu');
 
 // local, cu modificările încă nepublicate din panou (entitati-local.json); pe Vercel, doar ce e publicat
 const DATA_PUB = path.join(__dirname, '..', 'data', 'entitati.json'), DATA_LOCAL = path.join(__dirname, '..', 'data', 'entitati-local.json');
-const dataFile = () => (!process.env.VERCEL && fs.existsSync(DATA_LOCAL) ? DATA_LOCAL : DATA_PUB);
+// (cu ?previzualizare, și online: panoul arată paginile cu modificările nepublicate)
+const store = require('./store');
+const dataFile = (preview) => ((!process.env.VERCEL || preview) && store.exists(DATA_LOCAL) ? DATA_LOCAL : DATA_PUB);
 const { esc, today, fmtDay, median, quantile, milLei, initials, de, cohorta, TEME } = require('./util');
 const { tx } = require('./texte');
 const { homeBody } = require('./home');
@@ -39,7 +41,7 @@ function hideHidden(D, keepEditii) {
   return D;
 }
 function load(brandId, preview) {
-  const D = hideHidden(JSON.parse(fs.readFileSync(dataFile(), 'utf8')), preview);
+  const D = hideHidden(JSON.parse(store.read(dataFile(preview))), preview);
   // metodologia vine de pe site-ul vechi, cu „ediție”: pe site spunem „cohortă”
   const coh = (m) => ({ ...m, titlu: cohorta(m.titlu), puncte: (m.puncte || []).map(cohorta) });
   D.program.metodologie = (D.program.metodologie || []).map(coh);

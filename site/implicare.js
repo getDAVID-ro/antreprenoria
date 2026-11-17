@@ -1,6 +1,6 @@
 // Formularul „Susține programul” de pe /parteneri: aceiași pași ca în „Construiește parteneriatul” (formatul, tema, echipa), apoi datele de contact.
 // Orice buton îl deschide precompletat (configuratorul, „Propune un spațiu”, „Scrie-ne”, „Rezervă”); toate cererile ajung ca tip = cerere-sponsorizare,
-// cu alegerile scrise în mesaj. Aceeași validare în pagină (site.js) și pe server; ajung în Supabase (tabelul implicari) și în panou › Leads.
+// cu alegerile scrise în mesaj. Aceeași validare în pagină (site.js) și pe server; ajung în Neon (tabelul implicari) și în panou › Leads.
 const { esc } = require('./util');
 
 const FORMATE_IDS = ['atelier', 'editie', 'an'];

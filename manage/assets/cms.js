@@ -833,7 +833,7 @@ const CMS = (() => {
       const G = pendingGroups(), label = ids ? G.find((x) => x.ids.join(',') === d.cmsPublish)?.ce.join(', ') : `toate cele ${G.length} modificări`;
       if (!confirm(`Publici pe site-ul public: ${label}?
 
-Se trimite pe git și apare online în ~1 minut.`)) return;
+Apare pe site imediat.`)) return;
       t.disabled = true; t.textContent = 'Se publică…';
       try { const r = await api.send('/api/publica', 'POST', ids ? { ids } : {}); await refresh(); go(routeFromPath()); toast(r.mesaj); } catch (err) { toast(err.message); t.disabled = false; t.textContent = 'Publică'; }
       return;

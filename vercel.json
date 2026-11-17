@@ -1,8 +1,9 @@
 {
+  "regions": ["fra1"],
   "buildCommand": "echo \"Pe Vercel nu se reconstruiește creierul: data/entitati.json vine din git (npm run sync local).\"",
   "functions": {
     "server.js": {
-      "includeFiles": "{data,site,manage}/**"
+      "includeFiles": "{data,site,manage,scripts}/**"
     }
   },
   "headers": [

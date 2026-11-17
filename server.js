@@ -6,7 +6,8 @@
 //   GET /api/entitati   -> data/entitati.json (generat de npm run sync)
 //   GET /api/brand      -> data/brand.json        PUT /api/brand/activ {id} -> schimbă varianta folosită pe site
 //   PUT /api/brand/icon {activ?, culori?}         -> iconul de meniu pe mobil și modul lui de culoare
-//   POST /api/aplica    -> aplicarea în pași de pe /aplica, salvată în Supabase (GET ?reia=<token> o reia)     GET /api/aplicari -> lista pentru panou (doar local)
+//   POST /api/aplica    -> aplicarea în pași de pe /aplica, salvată în Neon (GET ?reia=<token> o reia)     GET /api/aplicari -> lista pentru panou (doar local)
+// Cu baza de date (DATABASE_URL, Neon): panoul merge și online, modificările și aplicările stau în Neon (site/db.js, site/store.js).
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -20,12 +21,12 @@ const TYPES = {
 };
 const JSON_FILES = { '/api/entitati': 'entitati.json', '/api/brand': 'brand.json' };
 
-// .env.local (doar local, exclus din git): APLICARI_CHEIE = cheia cu care panoul citește aplicările
+// .env.local (doar local, exclus din git; `vercel env pull` îl completează): DATABASE_URL = baza Neon, BLOB_READ_WRITE_TOKEN = Blob
 try {
-  fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split('\n').forEach((l) => { const m = /^\s*([A-Z_]+)\s*=\s*(.*)\s*$/.exec(l); if (m && !process.env[m[1]]) process.env[m[1]] = m[2]; });
+  fs.readFileSync(path.join(ROOT, '.env.local'), 'utf8').split('\n').forEach((l) => { const m = /^\s*([A-Z0-9_]+)\s*=\s*"?(.*?)"?\s*$/.exec(l); if (m && !process.env[m[1]]) process.env[m[1]] = m[2]; });
 } catch (e) {}
-// Supabase (proiectul „antreprenoria”, UE): adresa și cheia publică sunt publice prin natura lor; tabelul permite doar adăugare
-const SUPABASE = { url: 'https://gqhjaagqwizauzxhnbwi.supabase.co', key: 'sb_publishable_p5kxwfJFm4zC94TQ0dFTmg_UKV2WMOO' };
+const db = require('./site/db');
+const store = require('./site/store');
 
 function sendJson(res, code, obj) {
   res.writeHead(code, { 'Content-Type': TYPES['.json'], 'Cache-Control': 'no-store' });
@@ -62,8 +63,29 @@ function tooMany(req, key, max, min) {
   if (HITS.size > 5000) for (const [x, l] of HITS) if (!l.some((t) => now - t < 60 * 60e3)) HITS.delete(x);
   return list.length > max;
 }
-// apelurile către Supabase nu așteaptă la nesfârșit: după 10 secunde, formularul primește „nedisponibil”
-const SB_TIMEOUT = 10e3;
+// aplicarea în pași, în Neon: cu tokenul unei aplicări neterminate o completează, altfel începe una nouă; întoarce tokenul
+async function saveAplicare(rec) {
+  if (!db.on()) throw new Error('fără DATABASE_URL');
+  await db.init();
+  const rows = await db.q(`with p as (select $1::jsonb as p),
+    upd as (
+      update aplicari a set nume = p->>'nume', email = p->>'email', telefon = p->>'telefon', companie = p->>'companie', cui = p->>'cui',
+        cifra_afaceri = p->>'cifra_afaceri', editie = p->>'editie', sursa = p->>'sursa', sursa_alta = p->>'sursa_alta',
+        raspunsuri = coalesce(p->'raspunsuri', '{}'::jsonb), pas = greatest(a.pas, coalesce((p->>'pas')::int, 1)),
+        finalizata = coalesce((p->>'finalizata')::boolean, false),
+        stare = case when coalesce((p->>'finalizata')::boolean, false) then 'nouă' else a.stare end, actualizat = now()
+      from p where a.token = nullif(p->>'token', '')::uuid and not a.finalizata
+      returning a.token),
+    ins as (
+      insert into aplicari (nume, email, telefon, companie, cui, cifra_afaceri, editie, sursa, sursa_alta, acord, sursa_pagina, raspunsuri, pas, finalizata, stare)
+      select p->>'nume', p->>'email', p->>'telefon', p->>'companie', p->>'cui', p->>'cifra_afaceri', p->>'editie', p->>'sursa', p->>'sursa_alta', true, p->>'sursa_pagina',
+        coalesce(p->'raspunsuri', '{}'::jsonb), coalesce((p->>'pas')::int, 1), coalesce((p->>'finalizata')::boolean, false),
+        case when coalesce((p->>'finalizata')::boolean, false) then 'nouă' else 'incompletă' end
+      from p where not exists (select 1 from upd)
+      returning token)
+    select token::text as t from upd union all select token::text from ins`, [JSON.stringify(rec)]);
+  return rows[0] && rows[0].t;
+}
 // Previne ieșirea din directorul permis (../).
 function safe(base, rel) {
   const p = path.normalize(path.join(base, rel));
@@ -75,8 +97,10 @@ function fresh(mod) {
   return require(mod);
 }
 
-// pe Vercel fișierele sunt doar pentru citire: modificările din panou se fac local și ajung pe site prin git push
-const READ_ONLY = !!process.env.VERCEL;
+// pe Vercel fișierele sunt doar pentru citire: fără bază de date, modificările din panou se fac local și ajung pe site prin git push;
+// cu Neon, panoul se folosește și online, iar „Publică” schimbă site-ul imediat
+const READ_ONLY = !!process.env.VERCEL && !db.on();
+const ONLINE = db.on();
 const AL_RE = /^\/comunitate\/([a-z0-9-]+)\/?$/;
 
 // ---------- CMS: modificările din panou ----------
@@ -88,7 +112,8 @@ const JURNAL = path.join(DATA, 'curare', 'editari-local.json');
 // scripts/ rămâne doar local (.vercelignore): îl încărcăm la cerere, nu la build; pe Vercel panoul doar citește
 const script = (n) => require(path.join(ROOT, 'scripts', n));
 const EMPTY_EDITARI = () => ({ modificari: {}, program: {}, metodologie: null, cifre: null, agende: {}, participanti: {}, parteneri: {}, ascunse: [], texte: {} });
-const readJson = (f, def) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch (e) { return def; } };
+// fișierele din data/ trec prin site/store.js (disc sau Neon)
+const readJson = (f, def) => { try { const s = store.read(f); return s == null ? def : JSON.parse(s); } catch (e) { return def; } };
 function readPublished() {
   const E = readJson(EDITARI, {});
   try { return script('editari').published(E); } catch (e) { return { ...EMPTY_EDITARI(), ...E }; }
@@ -107,10 +132,26 @@ const patchBrand = (B, list) => { list.forEach((x) => { const v = B.variante.fin
 const brandWorking = () => readJurnal().intrari.filter((x) => x.tinta === 'brand').reduce((B, x) => patchBrand(B, x.patch), readJson(BRAND, { variante: [] }));
 function writeBrandLocal() {
   const has = readJurnal().intrari.some((x) => x.tinta === 'brand');
-  if (has) writeJson(BRAND_LOCAL, brandWorking()); else if (fs.existsSync(BRAND_LOCAL)) fs.unlinkSync(BRAND_LOCAL);
+  if (has) writeJson(BRAND_LOCAL, brandWorking()); else store.remove(BRAND_LOCAL);
 }
-const rebuild = () => { require('child_process').execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'build-entities.js')], { cwd: ROOT, stdio: 'ignore' }); writeBrandLocal(); };
-const writeJson = (f, v) => fs.writeFileSync(f, JSON.stringify(v, null, 2) + '\n');
+// entitățile = baza (din site-ul vechi + curare, data/entitati-baza.json, făcută de scripts/build-entities.js) + modificările din panou.
+// Cu Neon se calculează aici, în memorie; fără, le reface scriptul de build, pe disc.
+const BAZA = path.join(DATA, 'entitati-baza.json');
+function deriveEntities() {
+  const ED = script('editari'), base = fs.readFileSync(BAZA, 'utf8');
+  const pub = ED.published(readJson(EDITARI, {})), J = readJurnal();
+  store.write(path.join(DATA, 'entitati.json'), JSON.stringify(ED.apply(JSON.parse(base), pub)));
+  if (J.intrari.length) store.write(DATA_LOCAL, JSON.stringify(ED.apply(JSON.parse(base), ED.working(pub, J))));
+  else store.remove(DATA_LOCAL);
+  writeBrandLocal();
+}
+store.onLoad(deriveEntities);
+const rebuild = () => {
+  if (ONLINE) return deriveEntities();
+  require('child_process').execFileSync(process.execPath, [path.join(ROOT, 'scripts', 'build-entities.js')], { cwd: ROOT, stdio: 'ignore' });
+  writeBrandLocal();
+};
+const writeJson = (f, v) => store.write(f, JSON.stringify(v, null, 2) + '\n');
 // lista pentru panou: fiecare modificare nepublicată, cu eticheta și grupul ei (o salvare din panou poate avea mai multe)
 const pendingList = () => readJurnal().intrari.map(({ id, cand, ce, grup }) => ({ id, cand, ce, grup }));
 // istoricul publicărilor: după fiecare publicare se păstrează o copie a datelor publicate (o „versiune”),
@@ -119,7 +160,6 @@ const ISTORIC = path.join(DATA, 'curare', 'istoric.json');
 const VERSIUNI = path.join(DATA, 'curare', 'versiuni');
 const readIstoric = () => { const H = readJson(ISTORIC, null); return H && Array.isArray(H.versiuni) ? H : { versiuni: [] }; };
 function saveVersion(P, info) {
-  fs.mkdirSync(VERSIUNI, { recursive: true });
   const H = readIstoric();
   // prima dată: starea de dinainte devine „versiunea de pornire”, ca să existe mereu unde reveni
   if (!H.versiuni.length && info.inainte) {
@@ -136,6 +176,8 @@ function saveVersion(P, info) {
   return id;
 }
 const gitPublish = (msg) => {
+  // cu Neon, publicarea înseamnă salvarea în baza de date: site-ul o arată imediat, fără git
+  if (ONLINE) return;
   const { execFileSync } = require('child_process');
   const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
   git('add', 'data/curare/editari.json', 'data/entitati.json', 'data/brand.json', 'data/curare/istoric.json', 'data/curare/versiuni', ...(fs.existsSync(path.join(ROOT, 'site', 'assets', 'uploads')) ? ['site/assets/uploads'] : []));
@@ -145,10 +187,10 @@ const gitPublish = (msg) => {
 const PUB_NOTE = 'Modificările PUBLICATE din panou. Cele nepublicate stau în editari-local.json (doar local). Vezi scripts/editari.js.';
 // datele de lucru local, cele publicate pe Vercel
 const DATA_LOCAL = path.join(DATA, 'entitati-local.json');
-const dataFile = () => (!READ_ONLY && fs.existsSync(DATA_LOCAL) ? DATA_LOCAL : path.join(DATA, 'entitati.json'));
+const dataFile = () => (!READ_ONLY && store.exists(DATA_LOCAL) ? DATA_LOCAL : path.join(DATA, 'entitati.json'));
 const CMS_TIPURI = ['oameni', 'organizatii', 'editii', 'ateliere', 'locatii', 'teme', 'echipa'];
 function cmsEdit(b) {
-  const E = readEditari(), D = JSON.parse(fs.readFileSync(dataFile(), 'utf8'));
+  const E = readEditari(), D = JSON.parse(store.read(dataFile()));
   const before = JSON.parse(JSON.stringify(E));
   const { slug } = script('lib');
   const exists = (tip, id) => (tip === 'echipa' ? D.program.contact.echipa : tip === 'ateliere' ? D.editii.flatMap((e) => e.ateliere) : D[tip]).some((x) => x.id === id) || !!E.modificari[tip]?.[id];
@@ -264,6 +306,12 @@ async function handler(req, res) {
     };
   }
   try {
+    // cu Neon: datele panoului se aduc la zi înainte de răspuns (panoul și API-ul mereu; paginile cel mult o dată la 2 secunde)
+    if (ONLINE && (!url.startsWith('/assets/') || url === '/assets/brand.css')) {
+      const live = /^\/(api|manage)(\/|$)/.test(url) || req.method !== 'GET';
+      // dacă Neon nu răspunde, paginile merg mai departe cu ultimele date avute (salvările vor da eroare)
+      await store.load(live ? 0 : 2000).catch((e) => console.error('Neon indisponibil:', e.message));
+    }
     // adresele site-ului vechi (antreprenoria.ro) duc, într-un singur pas, la pagina nouă potrivită (site/redirects.js)
     if ((req.method === 'GET' || req.method === 'HEAD') && !/^\/(api|assets|manage)(\/|$)/.test(url)) {
       const to = fresh('./site/redirects').oldUrl(url);
@@ -275,8 +323,9 @@ async function handler(req, res) {
       return res.end();
     }
     if (req.method === 'GET' && JSON_FILES[url]) {
-      const f = url === '/api/entitati' ? dataFile() : url === '/api/brand' && !READ_ONLY && fs.existsSync(BRAND_LOCAL) ? BRAND_LOCAL : path.join(DATA, JSON_FILES[url]);
-      return fs.existsSync(f) ? sendJson(res, 200, fs.readFileSync(f, 'utf8')) : sendJson(res, 404, { error: 'lipsește ' + JSON_FILES[url] });
+      const f = url === '/api/entitati' ? dataFile() : url === '/api/brand' && !READ_ONLY && store.exists(BRAND_LOCAL) ? BRAND_LOCAL : path.join(DATA, JSON_FILES[url]);
+      const s = store.read(f);
+      return s != null ? sendJson(res, 200, s) : sendJson(res, 404, { error: 'lipsește ' + JSON_FILES[url] });
     }
     // aplicarea în pași: fiecare pas trimis se salvează (pasul 1 = contactul, pentru remindere); la final, finalizata = true
     if (url === '/api/aplica' && req.method === 'POST') {
@@ -292,22 +341,23 @@ async function handler(req, res) {
       if (!v.ok) return sendJson(res, 422, { error: 'Verifică câmpurile marcate.', errors: v.errors });
       const token = /^[0-9a-f-]{36}$/i.test(input.token || '') ? input.token : null;
       const rec = ap.record(v.data, { token, pas, finalizata, pagina: String(req.headers.referer || '').slice(0, 300) });
-      // aplicările merg în Supabase prin funcția aplicare_salveaza (cheia publică nu poate citi tabelul)
-      const r = await fetch(`${SUPABASE.url}/rest/v1/rpc/aplicare_salveaza`, { method: 'POST', headers: { apikey: SUPABASE.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ p: rec }), signal: AbortSignal.timeout(SB_TIMEOUT) }).catch(() => null);
-      if (!r || !r.ok) { console.error('aplicare nesalvată', r ? r.status : 'fără răspuns'); return sendJson(res, 503, { error: 'nedisponibil' }); }
-      return sendJson(res, 200, { ok: true, token: await r.json().catch(() => null) });
+      // aplicările merg în Neon (tabelul aplicari): cu token, se completează aplicarea începută; una trimisă nu se mai modifică
+      const t = await saveAplicare(rec).catch((e) => { console.error('aplicare nesalvată', e.message); return null; });
+      if (!t) return sendJson(res, 503, { error: 'nedisponibil' });
+      return sendJson(res, 200, { ok: true, token: t });
     }
-    // reluarea unei aplicări neterminate din linkul de reminder (/aplica?reia=<token>)
+    // reluarea unei aplicări neterminate din linkul de reminder (/aplica?reia=<token>): doar cu tokenul, doar cât nu e trimisă
     if (url === '/api/aplica' && req.method === 'GET') {
       const t = new URLSearchParams(query).get('reia') || '';
       if (!/^[0-9a-f-]{36}$/i.test(t)) return sendJson(res, 400, { error: 'Link invalid.' });
-      const r = await fetch(`${SUPABASE.url}/rest/v1/rpc/aplicare_reia`, { method: 'POST', headers: { apikey: SUPABASE.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ t }) }).catch(() => null);
-      const j = r && r.ok ? await r.json().catch(() => null) : null;
-      return j ? sendJson(res, 200, j) : sendJson(res, 404, { error: 'Aplicarea nu mai poate fi reluată.' });
+      const rows = db.on() ? await db.q(`select (jsonb_build_object('nume', nume, 'email', email, 'telefon', telefon, 'companie', companie, 'cui', cui,
+        'cifra_afaceri', cifra_afaceri, 'editie', editie, 'sursa', sursa, 'sursa_alta', sursa_alta, 'pas', pas) || raspunsuri)::text as j
+        from aplicari where token = $1::uuid and not finalizata`, [t]).catch(() => []) : [];
+      return rows.length ? sendJson(res, 200, rows[0].j) : sendJson(res, 404, { error: 'Aplicarea nu mai poate fi reluată.' });
     }
     // întrebările aplicării, pentru etichetele din panou (Leads)
     if (url === '/api/aplica-model' && req.method === 'GET') return sendJson(res, 200, fresh('./site/aplica').STEPS);
-    // formularul „Susține programul” (/parteneri): sponsorizare, găzduire, mentorat; salvat în Supabase (tabelul implicari)
+    // formularul „Susține programul” (/parteneri): sponsorizare, găzduire, mentorat; salvat în Neon (tabelul implicari)
     if (url === '/api/implicare' && req.method === 'POST') {
       if (tooMany(req, 'implicare', 5, 10)) return sendJson(res, 429, { error: 'Prea multe trimiteri. Încearcă din nou peste câteva minute.' });
       const input = await body(req).catch(() => null);
@@ -317,24 +367,22 @@ async function handler(req, res) {
       if (!v.ok) return sendJson(res, 422, { error: 'Verifică câmpurile marcate.', errors: v.errors });
       const d = v.data;
       const rec = { tip: d.tip, nume: d.nume, companie: d.companie, functie: d.functie || null, email: d.email, telefon: d.telefon || null, mesaj: d.mesaj || null, acord: true, sursa_pagina: String(req.headers.referer || '').slice(0, 300) || null };
-      const r = await fetch(`${SUPABASE.url}/rest/v1/implicari`, { method: 'POST', headers: { apikey: SUPABASE.key, 'Content-Type': 'application/json', Prefer: 'return=minimal' }, body: JSON.stringify(rec), signal: AbortSignal.timeout(SB_TIMEOUT) }).catch(() => null);
-      if (!r || !r.ok) { console.error('implicare nesalvată', r ? r.status : 'fără răspuns'); return sendJson(res, 503, { error: 'nedisponibil' }); }
+      const ok = db.on() && await db.init().then(() => db.q(`insert into implicari (tip, nume, companie, functie, email, telefon, mesaj, acord, sursa_pagina)
+        values ($1, $2, $3, $4, $5, $6, $7, true, $8)`, [rec.tip, rec.nume, rec.companie, rec.functie, rec.email, rec.telefon, rec.mesaj, rec.sursa_pagina])).then(() => true, (e) => { console.error('implicare nesalvată', e.message); return false; });
+      if (!ok) return sendJson(res, 503, { error: 'nedisponibil' });
       return sendJson(res, 200, { ok: true });
     }
-    if (url === '/api/implicari' && req.method === 'GET') {
-      if (READ_ONLY) return sendJson(res, 403, { error: 'Mesajele se văd doar în panoul local.' });
-      if (!process.env.APLICARI_CHEIE) return sendJson(res, 503, { error: 'Lipsește APLICARI_CHEIE în .env.local.' });
-      const r = await fetch(`${SUPABASE.url}/rest/v1/rpc/implicari_lista`, { method: 'POST', headers: { apikey: SUPABASE.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ cheie: process.env.APLICARI_CHEIE }) }).catch(() => null);
-      if (!r || !r.ok) return sendJson(res, 502, { error: 'Nu am putut citi mesajele din Supabase.' });
-      return sendJson(res, 200, await r.text());
-    }
-    // lista aplicărilor pentru panou: doar local, cu cheia din .env.local (pe Vercel panoul e public, deci nu le arată)
-    if (url === '/api/aplicari' && req.method === 'GET') {
-      if (READ_ONLY) return sendJson(res, 403, { error: 'Aplicările se văd doar în panoul local.' });
-      if (!process.env.APLICARI_CHEIE) return sendJson(res, 503, { error: 'Lipsește APLICARI_CHEIE în .env.local.' });
-      const r = await fetch(`${SUPABASE.url}/rest/v1/rpc/aplicari_lista`, { method: 'POST', headers: { apikey: SUPABASE.key, 'Content-Type': 'application/json' }, body: JSON.stringify({ cheie: process.env.APLICARI_CHEIE }) }).catch(() => null);
-      if (!r || !r.ok) return sendJson(res, 502, { error: 'Nu am putut citi aplicările din Supabase.' });
-      return sendJson(res, 200, await r.text());
+    // listele cu date personale (aplicări, mesaje de susținere): doar în panoul pornit local, pe calculatorul echipei.
+    // Panoul online nu are parolă, deci pe Vercel nu le arată.
+    if ((url === '/api/aplicari' || url === '/api/implicari') && req.method === 'GET') {
+      if (process.env.VERCEL) return sendJson(res, 403, { error: url === '/api/aplicari' ? 'Aplicările se văd doar în panoul local.' : 'Mesajele se văd doar în panoul local.' });
+      if (!db.on()) return sendJson(res, 503, { error: 'Lipsește DATABASE_URL în .env.local (baza Neon).' });
+      await db.init();
+      const rows = await db.q(url === '/api/aplicari'
+        ? `select coalesce(json_agg(a order by a.actualizat desc), '[]')::text as j from aplicari a`
+        : `select coalesce(json_agg(i order by i.primit desc), '[]')::text as j from implicari i`).catch(() => null);
+      if (!rows) return sendJson(res, 502, { error: 'Nu am putut citi datele din baza de date.' });
+      return sendJson(res, 200, rows[0].j);
     }
     // starea CMS-ului pentru panou: dacă se poate edita, textele paginilor, modificările încă nepublicate
     if (url === '/api/cms' && req.method === 'GET') {
@@ -347,8 +395,9 @@ async function handler(req, res) {
       const brand = fresh('./site/brand'), B = readJson(brand.FILE, {}); // varianta publicată, nu cea de lucru
       if (!B.variante.some((v) => v.id === id)) return sendJson(res, 400, { error: 'variantă inexistentă' });
       B.activ = id;
-      fs.writeFileSync(brand.FILE, JSON.stringify(B, null, 2));
+      writeJson(brand.FILE, B);
       writeBrandLocal();
+      await store.flush();
       return sendJson(res, 200, { ok: true, activ: id });
     }
     if (url === '/api/brand/icon' && req.method === 'PUT') {
@@ -358,13 +407,15 @@ async function handler(req, res) {
       if (culori !== undefined && !I.moduri_culoare.some((m) => m.id === culori)) return sendJson(res, 400, { error: 'mod de culoare inexistent' });
       if (activ !== undefined) I.activ = activ;
       if (culori !== undefined) I.culori = culori;
-      fs.writeFileSync(brand.FILE, JSON.stringify(B, null, 2));
+      writeJson(brand.FILE, B);
       writeBrandLocal();
+      await store.flush();
       return sendJson(res, 200, { ok: true, activ: I.activ, culori: I.culori });
     }
     // CMS-ul din panou: modificările se scriu în data/curare/editari.json, apoi entitățile se reconstruiesc
     if (url === '/api/editari' && req.method === 'PUT') {
       const r = cmsEdit(await body(req));
+      if (!r.error) await store.flush();
       return sendJson(res, r.error ? 400 : 200, r);
     }
     if (url === '/api/upload' && req.method === 'POST') {
@@ -374,9 +425,22 @@ async function handler(req, res) {
       const buf = Buffer.from(m[2], 'base64');
       if (buf.length > 4e6) return sendJson(res, 400, { error: 'Imaginea e prea mare (maxim 4 MB).' });
       const ext = { png: 'png', jpeg: 'jpg', jpg: 'jpg', webp: 'webp', 'svg+xml': 'svg' }[m[1]];
+      const file = `${script('lib').slug(nume || 'imagine').slice(0, 50) || 'imagine'}-${Date.now().toString(36)}.${ext}`;
+      // unde ajunge imaginea: în Vercel Blob (dacă există BLOB_READ_WRITE_TOKEN), altfel în Neon, altfel (local, fără bază) pe disc
+      if (process.env.BLOB_READ_WRITE_TOKEN) {
+        const r = await fetch(`https://blob.vercel-storage.com/uploads/${file}`, { method: 'PUT', body: buf,
+          headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`, 'x-api-version': '7', 'x-content-type': `image/${m[1]}`, 'x-add-random-suffix': '0' } }).catch(() => null);
+        const j = r && r.ok ? await r.json().catch(() => null) : null;
+        if (!j || !j.url) return sendJson(res, 502, { error: 'Imaginea nu s-a putut încărca în Blob.' });
+        return sendJson(res, 200, { url: j.url });
+      }
+      if (db.on()) {
+        await db.init();
+        await db.q('insert into imagini (cale, tip, date) values ($1, $2, $3)', [file, TYPES['.' + ext], buf.toString('base64')]);
+        return sendJson(res, 200, { url: `/assets/uploads/${file}` });
+      }
       const dir = path.join(ROOT, 'site', 'assets', 'uploads');
       fs.mkdirSync(dir, { recursive: true });
-      const file = `${script('lib').slug(nume || 'imagine').slice(0, 50) || 'imagine'}-${Date.now().toString(36)}.${ext}`;
       fs.writeFileSync(path.join(dir, file), buf);
       return sendJson(res, 200, { url: `/assets/uploads/${file}` });
     }
@@ -398,9 +462,10 @@ async function handler(req, res) {
       const n = new Set(sel.map((x) => x.grup)).size;
       saveVersion(P, { tip: 'publicare', ce: [...new Set(sel.map((x) => x.ce))], inainte, inainteBrand });
       try {
+        await store.flush();
         gitPublish(`Panou: ${n === 1 ? 'publicat' : n + ' modificări publicate'}: ${[...new Set(sel.map((x) => x.ce))].slice(0, 6).join('; ')}`);
       } catch (e) { return sendJson(res, 500, { error: 'Publicarea a eșuat: ' + String(e.stderr || e.message).slice(0, 300), nepublicate: pendingList() }); }
-      return sendJson(res, 200, { ok: true, mesaj: `${n === 1 ? 'Modificarea a fost publicată' : n + ' modificări publicate'}. Site-ul se actualizează în ~1 minut.`, nepublicate: pendingList() });
+      return sendJson(res, 200, { ok: true, mesaj: `${n === 1 ? 'Modificarea a fost publicată' : n + ' modificări publicate'}. ${ONLINE ? 'Apare pe site imediat.' : 'Site-ul se actualizează în ~1 minut.'}`, nepublicate: pendingList() });
     }
     // istoricul publicărilor (pentru pagina Modificări din panou)
     if (url === '/api/istoric' && req.method === 'GET') {
@@ -412,6 +477,8 @@ async function handler(req, res) {
       const { versiune } = await body(req).catch(() => ({}));
       const H = readIstoric(), v = H.versiuni.find((x) => x.id === versiune);
       if (!v) return sendJson(res, 404, { error: 'Versiune inexistentă.' });
+      await store.preload(path.join(VERSIUNI, v.id + '.json'));
+      await store.preload(path.join(VERSIUNI, v.id + '.brand.json'));
       const snap = readJson(path.join(VERSIUNI, v.id + '.json'), null);
       if (!snap) return sendJson(res, 500, { error: 'Copia versiunii lipsește.' });
       const P = readPublished(), snapBrand = readJson(path.join(VERSIUNI, v.id + '.brand.json'), null), Bnow = readJson(BRAND, null);
@@ -421,8 +488,8 @@ async function handler(req, res) {
       rebuild();
       const when = new Date(v.cand).toLocaleString('ro-RO', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
       saveVersion(snap, { tip: 'revenire', ce: [`Revenire la versiunea din ${when}`], din: v.id });
-      try { gitPublish(`Panou: revenire la versiunea din ${when}`); } catch (e) { return sendJson(res, 500, { error: 'Revenirea a eșuat la publicare: ' + String(e.stderr || e.message).slice(0, 300) }); }
-      return sendJson(res, 200, { ok: true, mesaj: `Site-ul a revenit la versiunea din ${when}. Se actualizează online în ~1 minut.` });
+      try { await store.flush(); gitPublish(`Panou: revenire la versiunea din ${when}`); } catch (e) { return sendJson(res, 500, { error: 'Revenirea a eșuat la publicare: ' + String(e.stderr || e.message).slice(0, 300) }); }
+      return sendJson(res, 200, { ok: true, mesaj: `Site-ul a revenit la versiunea din ${when}. ${ONLINE ? 'Apare pe site imediat.' : 'Se actualizează online în ~1 minut.'}` });
     }
     // renunțarea la modificări nepublicate: dispar din jurnal, iar starea locală revine la cea de dinainte
     if (url === '/api/renunta' && req.method === 'POST') {
@@ -432,6 +499,7 @@ async function handler(req, res) {
       J.intrari = J.intrari.filter((x) => !pick.has(x.id));
       writeJson(JURNAL, J);
       rebuild();
+      await store.flush();
       return sendJson(res, 200, { ok: true, nepublicate: pendingList() });
     }
     if (url.startsWith('/api/')) return sendJson(res, 404, { error: 'rută necunoscută' });
@@ -440,6 +508,13 @@ async function handler(req, res) {
     if (url === '/assets/brand.css') {
       res.writeHead(200, { 'Content-Type': TYPES['.css'], 'Cache-Control': 'no-store' });
       return res.end(fresh('./site/brand').css());
+    }
+    // imaginile încărcate din panou în Neon (cât timp nu există Blob): numele e unic, deci se pot păstra un an
+    if (url.startsWith('/assets/uploads/') && db.on() && !fs.existsSync(path.join(ROOT, 'site', url))) {
+      const rows = await db.q('select tip, date from imagini where cale = $1', [url.slice('/assets/uploads/'.length)]).catch(() => []);
+      if (!rows.length) { res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }); return res.end('404'); }
+      res.writeHead(200, { 'Content-Type': rows[0].tip, 'Cache-Control': 'public, max-age=31536000, immutable' });
+      return res.end(Buffer.from(rows[0].date, 'base64'));
     }
     if (url.startsWith('/assets/')) return sendFile(res, safe(path.join(ROOT, 'site', 'assets'), url.slice('/assets/'.length)) || '', /(^|&)v=[0-9a-f]{8}(&|$)/.test(query));
     // paginile site-ului se generează la fiecare cerere din data/entitati.json și data/brand.json

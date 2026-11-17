@@ -8,3 +8,6 @@ Thumbs.db
 data/curare/editari-local.json
 data/entitati-local.json
 data/brand-local.json
+
+.vercel
+.env*

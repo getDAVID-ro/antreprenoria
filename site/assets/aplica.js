@@ -1,5 +1,5 @@
 /* /aplica: criteriile, apoi 7 pași. Fiecare pas se verifică pe loc (aceleași reguli ca serverul, din site/aplica.js) și se salvează:
-   pasul 1 creează aplicarea (pentru remindere), următorii o completează. Ciorna rămâne și în browser; ?reia=<token> o aduce din Supabase. */
+   pasul 1 creează aplicarea (pentru remindere), următorii o completează. Ciorna rămâne și în browser; ?reia=<token> o aduce din baza de date. */
 (() => {
   const form = document.getElementById('ax');
   if (!form) return;

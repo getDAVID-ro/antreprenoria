@@ -40,7 +40,7 @@ routes.modificari = async function renderModificari() {
 document.addEventListener('click', async (e) => {
   const b = e.target.closest('[data-restore]');
   if (!b) return;
-  if (!confirm(`Readuci site-ul public la versiunea din ${b.dataset.when}?\n\nToate publicările de după ea dispar de pe site (rămân în istoric, ca să poți reveni). Se trimite pe git și apare online în ~1 minut.`)) return;
+  if (!confirm(`Readuci site-ul public la versiunea din ${b.dataset.when}?\n\nToate publicările de după ea dispar de pe site (rămân în istoric, ca să poți reveni). Apare pe site imediat.`)) return;
   b.disabled = true; b.textContent = 'Se revine…';
   try {
     const r = await api.send('/api/restaureaza', 'POST', { versiune: b.dataset.restore });

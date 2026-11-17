@@ -29,9 +29,9 @@ const PEOPLE_ALIAS = { 'silviu-hotaran-2': 'silviu-hotaran' };
 
 let cache = null;
 function load() {
-  const st = fs.statSync(DATA).mtimeMs;
+  const store = require('./store'), st = store.stamp();
   if (cache && cache.st === st) return cache;
-  const D = JSON.parse(fs.readFileSync(DATA, 'utf8'));
+  const D = JSON.parse(store.read(DATA));
   const eds = Object.fromEntries(D.editii.filter((e) => e.slug).map((e) => [`/${e.slug.toLowerCase()}`, e.serie === 'Cluj' ? `/editii/cluj-${e.numar}` : `/editii/${e.numar}`]));
   cache = { st, eds, people: new Set(D.oameni.map((p) => p.id)) };
   return cache;

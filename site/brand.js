@@ -6,7 +6,9 @@ const path = require('path');
 const FILE = path.join(__dirname, '..', 'data', 'brand.json');
 // local, cu modificările de brand încă nepublicate din panou (brand-local.json); pe Vercel, doar ce e publicat
 const LOCAL = path.join(__dirname, '..', 'data', 'brand-local.json');
-const load = () => JSON.parse(fs.readFileSync(!process.env.VERCEL && fs.existsSync(LOCAL) ? LOCAL : FILE, 'utf8'));
+// fișierele vin prin site/store.js: de pe disc sau, cu baza de date, din Neon
+const store = require('./store');
+const load = () => JSON.parse(store.read(!process.env.VERCEL && store.exists(LOCAL) ? LOCAL : FILE));
 
 // varianta afișată: cea cerută pentru previzualizare, dacă există, altfel cea activă
 function pick(B, preview) {

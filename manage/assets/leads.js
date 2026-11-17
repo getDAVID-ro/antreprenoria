@@ -1,14 +1,14 @@
-/* LEADS: aplicările din /aplica (Supabase, tabelul aplicari). Aplicarea se salvează din pasul 1, deci aici apar și cele neterminate,
+/* LEADS: aplicările din /aplica (Neon, tabelul aplicari). Aplicarea se salvează din pasul 1, deci aici apar și cele neterminate,
    cu linkul de reluare pentru reminder. Se văd doar în panoul local (cheia de citire e în .env.local); pe Vercel panoul e public, deci nu le arată. */
 const edName = (id) => { const m = /^(cluj|bucuresti)-(\d+)$/.exec(id || ''); return m ? `${m[1] === 'cluj' ? 'Cluj' : 'București'} #${m[2]}` : id || '—'; };
 const dt = (s) => new Date(s).toLocaleString('ro-RO', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 routes.leads = async function renderLeads() {
   if (new URLSearchParams(location.search).get('lista') === 'sustinere') {
-    $('#view').innerHTML = `<div class="head"><div><div class="crumb">manage › leads · mesajele din formularul de pe /parteneri (Supabase)</div><h1>Leads</h1></div></div>${leadsTabs('sustinere')}<div id="im-box"></div><p class="muted small">Datele personale de aici nu se publică: panoul de pe Vercel nu are acces la ele.</p>`;
+    $('#view').innerHTML = `<div class="head"><div><div class="crumb">manage › leads · mesajele din formularul de pe /parteneri (Neon)</div><h1>Leads</h1></div></div>${leadsTabs('sustinere')}<div id="im-box"></div><p class="muted small">Datele personale de aici nu se publică: panoul de pe Vercel nu are acces la ele.</p>`;
     return renderSustinere($('#im-box'));
   }
-  $('#view').innerHTML = `<div class="head"><div><div class="crumb">manage › leads · aplicările din formularul /aplica (Supabase)</div><h1>Leads</h1></div></div><div class="card empty">Se încarcă…</div>`;
+  $('#view').innerHTML = `<div class="head"><div><div class="crumb">manage › leads · aplicările din formularul /aplica (Neon)</div><h1>Leads</h1></div></div><div class="card empty">Se încarcă…</div>`;
   const [r, steps] = await Promise.all([fetch('/api/aplicari', { cache: 'no-store' }), fetch('/api/aplica-model').then((x) => x.json()).catch(() => [])]);
   const j = await r.json().catch(() => ({}));
   if (!r.ok) {
@@ -55,7 +55,7 @@ routes.leads = async function renderLeads() {
   };
 
   const nDone = all.filter(done).length;
-  $('#view').innerHTML = `<div class="head"><div><div class="crumb">manage › leads · aplicările din formularul /aplica (Supabase)</div><h1>Leads <span class="n" id="ap-count"></span></h1></div>
+  $('#view').innerHTML = `<div class="head"><div><div class="crumb">manage › leads · aplicările din formularul /aplica (Neon)</div><h1>Leads <span class="n" id="ap-count"></span></h1></div>
       <button type="button" id="ap-csv"${all.length ? '' : ' disabled'}>Descarcă CSV</button></div>${leadsTabs('aplicari')}
     <div class="toolbar"><div class="seg-chips" id="ap-st">${[['toate', 'Toate', all.length], ['trimise', 'Trimise', nDone], ['neterminate', 'Neterminate', all.length - nDone]].map(([k, l, n]) => `<button type="button" data-st="${k}" class="${k === 'toate' ? 'on' : ''}">${l} · ${n}</button>`).join('')}</div>
       <div class="seg-chips" id="ap-eds">${['toate', ...eds].map((e) => `<button type="button" data-ed="${esc(e)}" class="${e === 'toate' ? 'on' : ''}">${e === 'toate' ? 'Toate cohortele' : esc(edName(e))}</button>`).join('')}</div>
@@ -91,7 +91,7 @@ Promise.all(['/api/aplicari', '/api/implicari'].map((u) => fetch(u, { cache: 'no
   if (Array.isArray(a) || Array.isArray(b)) $('#n-leads').textContent = (a?.length || 0) + (b?.length || 0);
 });
 
-/* LEADS › Susținere: mesajele din formularul „Susține programul” de pe /parteneri (Supabase, tabelul implicari) */
+/* LEADS › Susținere: mesajele din formularul „Susține programul” de pe /parteneri (Neon, tabelul implicari) */
 const TIP_LABEL = { sponsorizare: 'Sponsorizare atelier', gazduire: 'Găzduire atelier', mentorat: 'Trainer / mentor', 'cerere-sponsorizare': 'Cerere sponsorizare' };
 async function renderSustinere(box) {
   box.innerHTML = '<div class="card empty">Se încarcă…</div>';
